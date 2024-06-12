@@ -39,7 +39,6 @@ class Renderer:
 
         while running:
             depth = []
-
             for x in range(size):
                 if treeList[itt][x] != None:
                     if treeList[itt][x].left != None:
@@ -53,7 +52,6 @@ class Renderer:
                 else:
                     depth.append(None)
                     depth.append(None)
-
             isEmpty = True
 
             for x in depth:
