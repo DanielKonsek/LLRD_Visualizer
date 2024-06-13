@@ -99,7 +99,7 @@ class Renderer:
                                 coordinate[row + 1][collumn * 2][0] + self.rad // 2,
                                 coordinate[row + 1][collumn * 2][1] - self.rad // 2,
                             ),
-                            list[row + 1][collumn * 2].color,
+                            y.left.color,
                         )
                     if y.right != None:
                         self.line(
@@ -111,9 +111,9 @@ class Renderer:
                                 coordinate[row + 1][collumn * 2 + 1][0] + self.rad // 2,
                                 coordinate[row + 1][collumn * 2 + 1][1] - self.rad // 2,
                             ),
-                            list[row + 1][collumn * 2 + 1].color,
+                            y.right.color,
                         )
-                    collumn = collumn + 1
+                collumn = collumn + 1
             row = row + 1
             collumn = 0
         return pygame.display.update()
@@ -122,6 +122,7 @@ class Renderer:
         self.listToGraph(self.treeToList(node))
 
     def printList(self, list):
+        print("-------------------")
         for x in list:
             lstring = ""
             for y in x:
@@ -129,7 +130,8 @@ class Renderer:
                     lstring = lstring + y.key + " ,"
                 else:
                     lstring = lstring + " " + " ,"
-        print(lstring)
+            
+            print(lstring)
 
     def clear(self):
         self.screen.fill(self.backgroundColour)
