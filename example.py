@@ -32,15 +32,31 @@ while running:
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT: #close game on quit event (for example pressing x on upper right) 
             running = False
+
         if event.type == pygame.KEYDOWN:
             print(event.unicode)
+            #special buttons
+            if event.key == pygame.K_DELETE:
+                if window.selectedNode != None:
+                    rbt.delete(window.selectedNode.key)
+                    window.selectedNode = None
+                continue
+
+            #all other buttons
             if rbt.get(event.unicode) != None: #check if key already in rbt, if yes delete, if no add to rbt 
                 rbt.delete(event.unicode)
+                if window.selectedNode != None and window.selectedNode.key == event.unicode:
+                    window.selectedNode = None
             else: 
                 rbt.put(event.unicode, random.randint(0,99))
-            window.clear()
-            window.treeToGraph(rbt.root)
             window.printList(window.treeToList(rbt.root))
 
+        if event.type == pygame.MOUSEBUTTONDOWN: # select Node
+            node = window.selectNodeAtCoord(event.pos[0], event.pos[1])
+            if node is not None:
+                print(node.key, node.value)
+        window.clear()
+        window.treeToGraph(rbt.root)
+        
 
     clock.tick(60)

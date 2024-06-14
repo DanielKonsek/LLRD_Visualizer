@@ -1,10 +1,59 @@
 import pygame
+import math
 from pygame import gfxdraw
 
 
 class Renderer:
-    font = None
-    rad = 16
+    nodes = [] # a list of all nodes. Needed for click selection
+    selectedNode = None
+
+    class Node:
+        rad = 16
+        font = None
+
+        def __init__(self, node, x, y):
+            self.key = node.key
+            self.value = node.value
+            self.x = x
+            self.y = y
+            self.color = (0, 0, 0)                
+            if node.color:
+                self.color = (255, 0, 0)
+
+            self.font = pygame.font.SysFont(None, 2 * self.rad)
+            
+        def draw(self, screen, selectedNode):
+            
+            if selectedNode is None or selectedNode.key != self.key:
+                gfxdraw.circle(
+                    screen,
+                    self.x + int(self.rad // 2),
+                    self.y + int(self.rad // 2),
+                    self.rad,
+                    self.color,
+                )
+                gfxdraw.circle(
+                screen,
+                self.x + int(self.rad // 2),
+                self.y + int(self.rad // 2),
+                self.rad + 1,
+                self.color,
+            )
+            else:
+                transparentBackground = (self.color[0],self.color[1],self.color[2],100)
+                gfxdraw.filled_circle(
+                    screen,
+                    self.x + int(self.rad // 2),
+                    self.y + int(self.rad // 2),
+                    self.rad + 1,
+                    pygame.Color(transparentBackground),
+                )
+                #render value of Node
+                img = self.font.render(str(self.value), True, "Black")
+                screen.blit(img,(10,10))
+
+            img = self.font.render(self.key, True, self.color)
+            screen.blit(img, (self.x, self.y))
 
     def __init__(
         self,
@@ -14,7 +63,6 @@ class Renderer:
         rad=16,
         backgroundColour=(255, 255, 255),
     ):
-        pygame.display.init()
         pygame.init()
         self.backgroundColour = backgroundColour
         self.width = width
@@ -24,7 +72,7 @@ class Renderer:
         pygame.display.set_caption(caption)
         self.screen.fill(self.backgroundColour)
         pygame.display.flip()
-        self.font = pygame.font.SysFont(None, 2 * self.rad)
+        
 
     def treeToList(self, node):
         treeList = []
@@ -68,22 +116,25 @@ class Renderer:
 
     def listToGraph(self, list):
         coordinate = []
-        row = 0
+        self.nodes = [] #reset nodes
+        rowNumber = 0
 
-        for node in list:
+        for row in list:
             rowVector = []
-            step = self.width // (pow(2, row) + 1)
+            step = self.width // (pow(2, rowNumber) + 1)
             x = step - self.rad // 2
-            y = (4 + 6 * row) * self.rad
-            for z in list[row]:
-                if z != None:
-                    self.node(z.key, x, y, z.color)
+            y = (4 + 6 * rowNumber) * self.rad
+            for node in list[rowNumber]:
+                if node != None:
+                    newNode = self.Node(node, x, y)
+                    newNode.draw(self.screen, self.selectedNode)
+                    self.nodes.append(newNode)
                 rowVector.append((x, y))
                 x = x + step
             coordinate.append(rowVector)
-            row = row + 1
+            rowNumber += 1
 
-        row = 0
+        rowNumber = 0
         collumn = 0
 
         for x in list:
@@ -92,29 +143,29 @@ class Renderer:
                     if y.left != None:
                         self.line(
                             (
-                                coordinate[row][collumn][0] - self.rad // 4,
-                                coordinate[row][collumn][1] + 1.2 * self.rad,
+                                coordinate[rowNumber][collumn][0] - self.rad // 4,
+                                coordinate[rowNumber][collumn][1] + 1.2 * self.rad,
                             ),
                             (
-                                coordinate[row + 1][collumn * 2][0] + self.rad // 2,
-                                coordinate[row + 1][collumn * 2][1] - self.rad // 2,
+                                coordinate[rowNumber + 1][collumn * 2][0] + self.rad // 2,
+                                coordinate[rowNumber + 1][collumn * 2][1] - self.rad // 2,
                             ),
                             y.left.color,
                         )
                     if y.right != None:
                         self.line(
                             (
-                                coordinate[row][collumn][0] + 5 * self.rad // 4,
-                                coordinate[row][collumn][1] + 1.2 * self.rad,
+                                coordinate[rowNumber][collumn][0] + 5 * self.rad // 4,
+                                coordinate[rowNumber][collumn][1] + 1.2 * self.rad,
                             ),
                             (
-                                coordinate[row + 1][collumn * 2 + 1][0] + self.rad // 2,
-                                coordinate[row + 1][collumn * 2 + 1][1] - self.rad // 2,
+                                coordinate[rowNumber + 1][collumn * 2 + 1][0] + self.rad // 2,
+                                coordinate[rowNumber + 1][collumn * 2 + 1][1] - self.rad // 2,
                             ),
                             y.right.color,
                         )
-                collumn = collumn + 1
-            row = row + 1
+                collumn += 1
+            rowNumber += 1
             collumn = 0
         return pygame.display.update()
 
@@ -136,30 +187,19 @@ class Renderer:
     def clear(self):
         self.screen.fill(self.backgroundColour)
 
-    def blit(self, img, x, y):
-        self.screen.blit(img, (x, y))
 
-    def node(self, key, x, y, isRed):
-        color = (0, 0, 0)
-        if isRed:
-            color = (255, 0, 0)
+    def selectNodeAtCoord(self,x,y): #returns a node at the given coordinates
+        if self.selectedNode is not None:
+            self.selectedNode = None
 
-        img = self.font.render(key, True, color)
-        self.blit(img, x, y)
-        gfxdraw.circle(
-            self.screen,
-            x + int(self.rad // 2),
-            y + int(self.rad // 2),
-            self.rad,
-            color,
-        )
-        gfxdraw.circle(
-            self.screen,
-            x + int(self.rad // 2),
-            y + int(self.rad // 2),
-            self.rad + 1,
-            color,
-        )
+        for node in self.nodes:
+            difX = node.x - x
+            difY = node.y - y
+            distance = math.sqrt(difX ** 2 + difY ** 2)
+            if distance <= node.rad * 2:
+                self.selectedNode = node
+                return node
+        return None
 
     def line(self, cord1, cord2, isRed):
         color = (0, 0, 0)
